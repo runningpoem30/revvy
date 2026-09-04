@@ -5,7 +5,7 @@ import { config } from '../config';
 
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(config.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
 
 // Strict Zod schema for the expected LLM output
 export const DiagnosisSchema = z.object({
