@@ -14,12 +14,9 @@ export const DiagnosisSchema = z.object({
   is_retryable: z.boolean(),
   reasoning: z.string(),
   suggested_strategy: z.enum([
-    'immediate_retry',
-    'wait_24h_retry',
-    'payment_link_sms',
-    'payment_link_email',
-    'escalate_to_human',
-    'no_action'
+    'PAYMENT_LINK_SMS',
+    'PAYMENT_LINK_EMAIL',
+    'ESCALATE_TO_HUMAN'
   ]),
 });
 
@@ -48,7 +45,7 @@ Provide a strictly valid JSON response matching this schema exactly (no markdown
   "confidence": number between 0 and 1,
   "is_retryable": boolean,
   "reasoning": "string explaining your thought process",
-  "suggested_strategy": "one of: immediate_retry, wait_24h_retry, payment_link_sms, payment_link_email, escalate_to_human, no_action"
+  "suggested_strategy": "one of: PAYMENT_LINK_SMS, PAYMENT_LINK_EMAIL, ESCALATE_TO_HUMAN"
 }
   `;
 

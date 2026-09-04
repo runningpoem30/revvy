@@ -28,7 +28,7 @@ export async function determineRecoveryStrategy(payment: Payment) {
       confidence: 1,
       is_retryable: false,
       reasoning: 'Max recovery attempts reached. Stopping automated recovery.',
-      suggested_strategy: 'escalate_to_human'
+      suggested_strategy: 'ESCALATE_TO_HUMAN'
     }, ['max_attempts_reached']);
   }
 
