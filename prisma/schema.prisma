@@ -1,0 +1,74 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Represents a Razorpay Order
+model Order {
+  id          String       @id
+  amount      Int
+  currency    String
+  status      String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  payments    Payment[]
+}
+
+// Represents a Razorpay Payment Attempt
+model Payment {
+  id             String    @id
+  orderId        String?
+  amount         Int
+  currency       String
+  status         String
+  method         String?
+  errorCode      String?
+  errorReason    String?
+  errorDescription String?
+  email          String?
+  contact        String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  order          Order?    @relation(fields: [orderId], references: [id])
+  recoveryAction RecoveryAction?
+}
+
+// Represents the AI's diagnosis and chosen recovery action
+model RecoveryAction {
+  id              String   @id @default(uuid())
+  paymentId       String   @unique
+  category        String   // "payment_failure", "checkout_abandoned", etc.
+  rootCause       String   // e.g., "insufficient_funds"
+  confidence      Float    // e.g., 0.95
+  aiReasoning     String   // Full reasoning from Gemini
+  strategy        String   // e.g., "payment_link_sms"
+  status          String   // "pending", "executed", "recovered", "failed", "escalated"
+  paymentLinkId   String?  // If a payment link was generated
+  recoveryAmount  Int?     // Amount recovered (if successful)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  payment         Payment  @relation(fields: [paymentId], references: [id])
+  auditLogs       AuditLog[]
+}
+
+// Immutable ledger of every action the agent takes
+model AuditLog {
+  id               String   @id @default(uuid())
+  recoveryActionId String
+  stage            String   // "diagnosis", "execution", "webhook_received"
+  message          String
+  metadata         String   // JSON string of constraints checked, etc.
+  createdAt        DateTime @default(now())
+
+  recoveryAction   RecoveryAction @relation(fields: [recoveryActionId], references: [id])
+}

@@ -1,5 +1,50 @@
-// packages/agent/src/index.ts
-// RevenueGuard AI Agent — Entry Point
-// This file will be built out in Step 3.
+import express, { Request, Response } from 'express';
+import cors from 'cors';
+import { PrismaClient } from '@prisma/client';
+import dotenv from 'dotenv';
 
-console.log("🛡️ RevenueGuard AI Agent — Starting...");
+import { config } from './config';
+
+const app = express();
+const port = config.AGENT_PORT;
+
+// Initialize Prisma
+const prisma = new PrismaClient();
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Health check endpoint
+app.get('/health', async (req: Request, res: Response) => {
+  try {
+    // Quick DB check
+    await prisma.$queryRaw`SELECT 1`;
+    res.status(200).json({ 
+      status: 'ok', 
+      service: 'RevenueGuard AI Agent',
+      db: 'connected'
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      status: 'error', 
+      service: 'RevenueGuard AI Agent',
+      db: 'disconnected',
+      error: String(error)
+    });
+  }
+});
+
+// Start server
+const server = app.listen(port, () => {
+  console.log(`🛡️ RevenueGuard AI Agent running on port ${port}`);
+});
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  console.log('Shutting down...');
+  await prisma.$disconnect();
+  server.close(() => {
+    process.exit(0);
+  });
+});
