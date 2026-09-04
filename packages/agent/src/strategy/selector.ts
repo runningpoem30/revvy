@@ -56,6 +56,16 @@ async function saveAction(
   diagnosis: DiagnosisResult, 
   constraintsChecked: string[]
 ) {
+  // Check if a recovery action already exists for this payment (idempotency)
+  const existingAction = await prisma.recoveryAction.findUnique({
+    where: { paymentId: payment.id }
+  });
+
+  if (existingAction) {
+    console.log(`ℹ️ Recovery action already exists for payment ${payment.id}. Skipping duplicate AI diagnosis.`);
+    return existingAction;
+  }
+
   // First, log the diagnosis decision in the RecoveryAction table
   const action = await prisma.recoveryAction.create({
     data: {

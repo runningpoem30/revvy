@@ -7,25 +7,26 @@ const prisma = new PrismaClient();
 import { determineRecoveryStrategy } from '../strategy/selector';
 import { executeRecovery } from '../executor/runner';
 
+import Razorpay from 'razorpay';
+
 export const handleRazorpayWebhook = async (req: Request, res: Response) => {
   const signature = req.headers['x-razorpay-signature'] as string;
   const payload = req.body;
 
-  // 1. Verify Signature
+  // 1. Strict Signature Verification (Hackathon Requirement)
   if (razorpayWebhookSecret) {
-    const bodyString = (req as any).rawBody || JSON.stringify(payload);
+    if (!signature || !(req as any).rawBody) {
+      console.error('Webhook signature mismatch. Potential spoofing attempt: Missing signature or rawBody.');
+      return res.status(400).json({ error: 'Invalid signature' });
+    }
+
     const expectedSignature = crypto
       .createHmac('sha256', razorpayWebhookSecret)
-      .update(bodyString)
+      .update((req as any).rawBody)
       .digest('hex');
 
     if (expectedSignature !== signature) {
-      console.error('Webhook signature mismatch. Potential spoofing attempt.');
-      console.error(`Received signature: ${signature}`);
-      console.error(`Expected signature: ${expectedSignature}`);
-      console.error(`Has rawBody: ${!!(req as any).rawBody}`);
-      // For local dev/hackathon with mock secrets, we might want to bypass blocking,
-      // but in production, we MUST return 400.
+      console.error('Webhook signature mismatch. Potential spoofing attempt: Signature mismatch.');
       return res.status(400).json({ error: 'Invalid signature' });
     }
   }
@@ -53,6 +54,20 @@ export const handleRazorpayWebhook = async (req: Request, res: Response) => {
 async function processPaymentFailed(paymentEntity: any) {
   console.log(`💥 Processing real payment failure for payment ${paymentEntity.id}`);
   
+  // Ensure the Order exists in the database to prevent foreign key constraints from failing
+  if (paymentEntity.order_id) {
+    await prisma.order.upsert({
+      where: { id: paymentEntity.order_id },
+      update: {},
+      create: {
+        id: paymentEntity.order_id,
+        amount: paymentEntity.amount,
+        currency: paymentEntity.currency,
+        status: 'unknown_from_webhook',
+      }
+    });
+  }
+
   // Save or update the payment in our DB
   const payment = await prisma.payment.upsert({
     where: { id: paymentEntity.id },
@@ -81,5 +96,9 @@ async function processPaymentFailed(paymentEntity: any) {
 
   // Step 12: Trigger the AI brain to determine a strategy, and then execute it.
   const action = await determineRecoveryStrategy(payment);
-  await executeRecovery(action, payment);
+  if (action && action.status === 'pending') {
+    await executeRecovery(action, payment);
+  } else if (action) {
+    console.log(`⏭️ Strategy already ${action.status}. Skipping duplicate execution.`);
+  }
 }
