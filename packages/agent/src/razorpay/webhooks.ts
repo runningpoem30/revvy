@@ -17,7 +17,7 @@ export const handleRazorpayWebhook = async (req: Request, res: Response) => {
       .digest('hex');
 
     if (expectedSignature !== signature) {
-      console.error('❌ Webhook signature mismatch. Potential spoofing attempt.');
+      console.error('Webhook signature mismatch. Potential spoofing attempt.');
       // For local dev/hackathon with mock secrets, we might want to bypass blocking,
       // but in production, we MUST return 400.
       return res.status(400).json({ error: 'Invalid signature' });
@@ -71,5 +71,5 @@ async function processPaymentFailed(paymentEntity: any) {
     }
   });
 
-  console.log(`✅ Logged payment failure ${paymentEntity.id} to database`);
+  console.log(`Logged payment failure ${paymentEntity.id} to database`);
 }

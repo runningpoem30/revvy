@@ -69,14 +69,14 @@ Provide a strictly valid JSON response matching this schema exactly (no markdown
     const validatedData = DiagnosisSchema.safeParse(jsonParsed);
     
     if (!validatedData.success) {
-      console.error('❌ LLM output failed Zod validation:', validatedData.error.format());
+      console.error(' LLM output failed Zod validation:', validatedData.error.format());
       return null; // Will trigger fallback in the caller
     }
 
     return validatedData.data;
 
   } catch (error) {
-    console.error('❌ Gemini API Error:', error);
+    console.error(' Gemini API Error:', error);
     return null; // Will trigger fallback in the caller
   }
 }
