@@ -4,6 +4,7 @@ import { PrismaClient } from '@prisma/client';
 import dotenv from 'dotenv';
 
 import { config } from './config';
+import { handleRazorpayWebhook } from './razorpay/webhooks';
 
 const app = express();
 const port = config.AGENT_PORT;
@@ -15,6 +16,9 @@ const prisma = new PrismaClient();
 app.use(cors());
 app.use(express.json());
 
+// Webhooks
+app.post('/api/webhooks/razorpay', handleRazorpayWebhook);
+
 // Health check endpoint
 app.get('/health', async (req: Request, res: Response) => {
   try {
@@ -22,13 +26,13 @@ app.get('/health', async (req: Request, res: Response) => {
     await prisma.$queryRaw`SELECT 1`;
     res.status(200).json({ 
       status: 'ok', 
-      service: 'RevenueGuard AI Agent',
+      service: 'Revvy AI Agent',
       db: 'connected'
     });
   } catch (error) {
     res.status(500).json({ 
       status: 'error', 
-      service: 'RevenueGuard AI Agent',
+      service: 'Revvy AI Agent',
       db: 'disconnected',
       error: String(error)
     });
@@ -37,7 +41,7 @@ app.get('/health', async (req: Request, res: Response) => {
 
 // Start server
 const server = app.listen(port, () => {
-  console.log(`🛡️ RevenueGuard AI Agent running on port ${port}`);
+  console.log(`🛡️ Revvy AI Agent running on port ${port}`);
 });
 
 // Graceful shutdown
