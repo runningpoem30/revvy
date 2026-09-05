@@ -1,9 +1,24 @@
-import { METRICS, formatINR } from "@/lib/mock-data";
+import { RecoveryJob, formatINR } from "@/lib/mock-data";
 
-export default function MetricsRow() {
+function computeMetrics(jobs: RecoveryJob[]) {
+  return {
+    atRiskTotal: jobs.reduce((sum, j) => sum + j.payment.amount, 0),
+    atRiskCount: jobs.length,
+    recoveredTotal: jobs.reduce(
+      (sum, j) => sum + (j.recoveryAction.recoveryAmount ?? 0),
+      0
+    ),
+    recoveredCount: jobs.filter((j) => j.recoveryAction.status === "recovered").length,
+    escalatedCount: jobs.filter((j) => j.recoveryAction.status === "escalated").length,
+  };
+}
+
+export default function MetricsRow({ jobs }: { jobs: RecoveryJob[] }) {
+  const metrics = computeMetrics(jobs);
+
   const recoveryRate =
-    METRICS.atRiskTotal > 0
-      ? ((METRICS.recoveredTotal / METRICS.atRiskTotal) * 100).toFixed(1)
+    metrics.atRiskTotal > 0
+      ? ((metrics.recoveredTotal / metrics.atRiskTotal) * 100).toFixed(1)
       : "0.0";
 
   return (
@@ -14,10 +29,10 @@ export default function MetricsRow() {
           At-Risk Revenue
         </p>
         <p className="font-mono text-3xl font-semibold text-zinc-900 tracking-tight">
-          {formatINR(METRICS.atRiskTotal)}
+          {formatINR(metrics.atRiskTotal)}
         </p>
         <p className="text-sm text-zinc-500 mt-1.5">
-          {METRICS.atRiskCount} payments detected
+          {metrics.atRiskCount} payments detected
         </p>
       </div>
 
@@ -27,7 +42,7 @@ export default function MetricsRow() {
           Recovered Revenue
         </p>
         <p className="font-mono text-3xl font-semibold text-zinc-900 tracking-tight">
-          {formatINR(METRICS.recoveredTotal)}
+          {formatINR(metrics.recoveredTotal)}
         </p>
         <div className="flex items-center gap-2 mt-1.5">
           <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -42,7 +57,7 @@ export default function MetricsRow() {
           Escalations &amp; Exceptions
         </p>
         <p className="font-mono text-3xl font-semibold text-zinc-900 tracking-tight">
-          {METRICS.escalatedCount} Cases
+          {metrics.escalatedCount} Cases
         </p>
         <p className="text-sm text-zinc-500 mt-1.5">
           Bounded stopping rules applied

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MOCK_RECOVERY_JOBS, RecoveryJob, formatINR, maskContact } from "@/lib/mock-data";
+import { RecoveryJob, formatINR, maskContact } from "@/lib/mock-data";
 
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { bg: string; text: string; dot: string; label: string }> = {
@@ -112,8 +112,10 @@ function nameFromEmail(email: string): string {
 }
 
 export default function RecoveryTable({
+  jobs,
   onSelectJob,
 }: {
+  jobs: RecoveryJob[];
   onSelectJob: (job: RecoveryJob) => void;
 }) {
   return (
@@ -126,7 +128,7 @@ export default function RecoveryTable({
               Recovery Transactions
             </h2>
             <p className="text-xs text-zinc-400 mt-0.5">
-              {MOCK_RECOVERY_JOBS.length} records from the RecoveryJob state machine
+              {jobs.length} records from the RecoveryJob state machine
             </p>
           </div>
           <span className="text-xs font-mono text-zinc-400">
@@ -163,7 +165,7 @@ export default function RecoveryTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100">
-            {MOCK_RECOVERY_JOBS.map((job) => (
+            {jobs.map((job) => (
               <tr
                 key={job.payment.id}
                 onClick={() => onSelectJob(job)}
@@ -219,7 +221,7 @@ export default function RecoveryTable({
       {/* Table footer */}
       <div className="px-6 py-3 border-t border-zinc-100 bg-zinc-50/40">
         <p className="text-xs text-zinc-400">
-          Showing {MOCK_RECOVERY_JOBS.length} of {MOCK_RECOVERY_JOBS.length} recovery jobs
+          Showing {jobs.length} of {jobs.length} recovery jobs
         </p>
       </div>
     </div>
