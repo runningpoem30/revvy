@@ -1,4 +1,4 @@
-# Revvy AI (RevenueGuard)
+# Revvy - Your AI Recovery Agent
 
 An autonomous revenue recovery agent built to integrate with Razorpay. Revvy AI intercepts failed payments in real-time, diagnoses the root cause using an LLM intelligence layer, and programmatically executes personalized recovery strategies (such as generating and dispatching Razorpay Payment Links via SMS).
 
