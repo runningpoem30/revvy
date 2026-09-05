@@ -15,8 +15,9 @@ const envSchema = z.object({
   RAZORPAY_KEY_SECRET: z.string().min(1, "Razorpay Key Secret is required"),
   RAZORPAY_WEBHOOK_SECRET: z.string().min(1, "Razorpay Webhook Secret is required"),
   
-  // Gemini
-  GEMINI_API_KEY: z.string().min(1, "Gemini API Key is required"),
+  // Gemini (comma-separated list of keys supported)
+  GEMINI_API_KEY: z.string().min(1, "Gemini API Key is required")
+    .transform(str => str.split(',').map(s => s.trim()).filter(Boolean)),
 
   // DB
   DATABASE_URL: z.string().url("Must be a valid SQLite file URL"),

@@ -108,6 +108,9 @@ function nameFromEmail(email: string): string {
     "vikram.reddy@gmail.com": "Vikram Reddy",
     "meera.iyer@techstartup.io": "Meera Iyer",
   };
+  if (!email || email === "void" || email === "void@razorpay.com") {
+    return "Guest Customer";
+  }
   return names[email] || email.split("@")[0].replace(".", " ");
 }
 

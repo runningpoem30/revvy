@@ -39,6 +39,9 @@ export const handleRazorpayWebhook = async (req: Request, res: Response) => {
       case 'payment.failed':
         await processPaymentFailed(payload.payload.payment.entity);
         break;
+      case 'payment_link.paid':
+        await processPaymentLinkPaid(payload.payload.payment_link.entity);
+        break;
       // We can add order.paid, subscription.pending, etc. later
       default:
         console.log(`ℹ️ Unhandled event type: ${event}`);
@@ -47,7 +50,7 @@ export const handleRazorpayWebhook = async (req: Request, res: Response) => {
     res.status(200).json({ status: 'ok' });
   } catch (error) {
     console.error('❌ Error processing webhook:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', details: error instanceof Error ? error.stack : String(error) });
   }
 };
 
@@ -101,4 +104,44 @@ async function processPaymentFailed(paymentEntity: any) {
   } else if (action) {
     console.log(`⏭️ Strategy already ${action.status}. Skipping duplicate execution.`);
   }
+}
+
+async function processPaymentLinkPaid(paymentLinkEntity: any) {
+  const notes = paymentLinkEntity.notes || {};
+  const recoveryActionId = notes.recovery_action_id;
+
+  if (!recoveryActionId) {
+    console.log(`ℹ️ Payment link ${paymentLinkEntity.id} paid, but no recovery_action_id in notes. Ignored.`);
+    return;
+  }
+
+  // Ensure the recovery action actually exists in our DB before trying to update it
+  // (In case the DB was wiped/reset but Razorpay is sending a webhook for an old link)
+  const existingAction = await prisma.recoveryAction.findUnique({
+    where: { id: recoveryActionId }
+  });
+
+  if (!existingAction) {
+    console.log(`⚠️ Webhook received for paid link ${paymentLinkEntity.id}, but RecoveryAction ${recoveryActionId} was not found in the local database. (Was the DB reset?)`);
+    return;
+  }
+
+  console.log(`🎉 Recovery successful for action ${recoveryActionId}! Payment link paid.`);
+
+  await prisma.recoveryAction.update({
+    where: { id: recoveryActionId },
+    data: { 
+      status: 'recovered',
+      recoveryAmount: paymentLinkEntity.amount_paid || paymentLinkEntity.amount
+    }
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      recoveryActionId: recoveryActionId,
+      stage: 'FUNDS_RECOVERED',
+      message: `Payment link paid. Recovery confirmed: INR ${(paymentLinkEntity.amount_paid || paymentLinkEntity.amount) / 100}.`,
+      metadata: JSON.stringify({ paymentLinkId: paymentLinkEntity.id })
+    }
+  });
 }

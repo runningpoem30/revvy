@@ -3,9 +3,11 @@ import { z } from 'zod';
 import { Payment } from '@prisma/client';
 import { config } from '../config';
 
-// Initialize Gemini
-const genAI = new GoogleGenerativeAI(config.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
+// Initialize Gemini pool
+const models = config.GEMINI_API_KEY.map(key => {
+  const genAI = new GoogleGenerativeAI(key);
+  return genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
+});
 
 // Strict Zod schema for the expected LLM output
 export const DiagnosisSchema = z.object({
@@ -49,31 +51,39 @@ Provide a strictly valid JSON response matching this schema exactly (no markdown
 }
   `;
 
-  try {
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: {
-        responseMimeType: 'application/json',
+  let lastError = null;
+
+  for (const model of models) {
+    try {
+      const result = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+          responseMimeType: 'application/json',
+        }
+      });
+
+      const responseText = result.response.text();
+      
+      // Parse the JSON string
+      const jsonParsed = JSON.parse(responseText);
+      
+      // Validate with Zod
+      const validatedData = DiagnosisSchema.safeParse(jsonParsed);
+      
+      if (!validatedData.success) {
+        console.error(' LLM output failed Zod validation:', validatedData.error.format());
+        return null; // Will trigger fallback in the caller
       }
-    });
 
-    const responseText = result.response.text();
-    
-    // Parse the JSON string
-    const jsonParsed = JSON.parse(responseText);
-    
-    // Validate with Zod
-    const validatedData = DiagnosisSchema.safeParse(jsonParsed);
-    
-    if (!validatedData.success) {
-      console.error(' LLM output failed Zod validation:', validatedData.error.format());
-      return null; // Will trigger fallback in the caller
+      return validatedData.data;
+
+    } catch (error: any) {
+      console.warn(`⚠️ Gemini API failed (Error: ${error.status || error.message}). Retrying with next key...`);
+      lastError = error;
+      // loop continues to the next model
     }
-
-    return validatedData.data;
-
-  } catch (error) {
-    console.error(' Gemini API Error:', error);
-    return null; // Will trigger fallback in the caller
   }
+
+  console.error('❌ All Gemini API keys failed. Last error:', lastError?.message || lastError);
+  return null; // Will trigger fallback in the caller
 }
