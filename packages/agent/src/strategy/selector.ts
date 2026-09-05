@@ -10,7 +10,7 @@ const prisma = new PrismaClient();
  * Orchestrates classification, diagnosis, and constraint checking.
  */
 export async function determineRecoveryStrategy(payment: Payment) {
-  console.log(`\n🧠 Determining strategy for payment ${payment.id}...`);
+  console.log(`\n Determining strategy for payment ${payment.id}...`);
 
   // 1. Classify the leak
   const category = classifyRevenueLeak(payment);
@@ -22,7 +22,7 @@ export async function determineRecoveryStrategy(payment: Payment) {
   });
 
   if (previousActions >= 3) {
-    console.log(`   🛑 Constraint met: Max attempts (3) reached. Escalating.`);
+    console.log(`    Constraint met: Max attempts (3) reached. Escalating.`);
     return await saveAction(payment, category, {
       root_cause: payment.errorReason || 'unknown',
       confidence: 1,
@@ -62,7 +62,7 @@ async function saveAction(
   });
 
   if (existingAction) {
-    console.log(`ℹ️ Recovery action already exists for payment ${payment.id}. Skipping duplicate AI diagnosis.`);
+    console.log(` Recovery action already exists for payment ${payment.id}. Skipping duplicate AI diagnosis.`);
     return existingAction;
   }
 

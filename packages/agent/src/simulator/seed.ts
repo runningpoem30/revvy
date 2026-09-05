@@ -36,7 +36,7 @@ const scenarios = [
 ];
 
 async function seed() {
-  console.log('🌱 Starting Revvy AI synthetic data generator...');
+  console.log(' Starting Revvy AI synthetic data generator...');
 
   // Clean existing DB for fresh run
   await prisma.auditLog.deleteMany({});
@@ -46,7 +46,7 @@ async function seed() {
 
   for (const scenario of scenarios) {
     try {
-      console.log(`\n📦 Creating Razorpay Order for ₹${scenario.amount / 100}...`);
+      console.log(`\n Creating Razorpay Order for �${scenario.amount / 100}...`);
       
       // 1. Create a REAL order in Razorpay (Test Mode)
       const order = await razorpay.orders.create({
@@ -55,7 +55,7 @@ async function seed() {
         receipt: `rcpt_${crypto.randomBytes(4).toString('hex')}`
       });
       
-      console.log(`✅ Order created: ${order.id}`);
+      console.log(` Order created: ${order.id}`);
 
       // 2. Save Order to our DB
       await prisma.order.create({
@@ -86,14 +86,14 @@ async function seed() {
         }
       });
       
-      console.log(`💥 Simulated payment failure: ${mockPaymentId} (${scenario.errorReason})`);
+      console.log(` Simulated payment failure: ${mockPaymentId} (${scenario.errorReason})`);
       
     } catch (err) {
-      console.error('❌ Failed to generate scenario:', err);
+      console.error(' Failed to generate scenario:', err);
     }
   }
 
-  console.log('\n✅ Synthetic data generation complete!');
+  console.log('\n Synthetic data generation complete!');
   await prisma.$disconnect();
 }
 

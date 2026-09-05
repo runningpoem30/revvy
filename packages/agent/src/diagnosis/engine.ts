@@ -33,7 +33,7 @@ You are an expert Staff-Level FinTech AI Agent specializing in Revenue Recovery 
 Analyze the following failed payment and determine the root cause and the best recovery strategy.
 
 Payment Context:
-- Amount: ₹${payment.amount / 100}
+- Amount: �${payment.amount / 100}
 - Currency: ${payment.currency}
 - Method: ${payment.method}
 - Error Code: ${payment.errorCode}
@@ -78,12 +78,12 @@ Provide a strictly valid JSON response matching this schema exactly (no markdown
       return validatedData.data;
 
     } catch (error: any) {
-      console.warn(`⚠️ Gemini API failed (Error: ${error.status || error.message}). Retrying with next key...`);
+      console.warn(` Gemini API failed (Error: ${error.status || error.message}). Retrying with next key...`);
       lastError = error;
       // loop continues to the next model
     }
   }
 
-  console.error('❌ All Gemini API keys failed. Last error:', lastError?.message || lastError);
+  console.error(' All Gemini API keys failed. Last error:', lastError?.message || lastError);
   return null; // Will trigger fallback in the caller
 }

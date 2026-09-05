@@ -32,7 +32,7 @@ export const handleRazorpayWebhook = async (req: Request, res: Response) => {
   }
 
   const event = payload.event;
-  console.log(`📥 Received Webhook Event: ${event}`);
+  console.log(` Received Webhook Event: ${event}`);
 
   try {
     switch (event) {
@@ -44,18 +44,18 @@ export const handleRazorpayWebhook = async (req: Request, res: Response) => {
         break;
       // We can add order.paid, subscription.pending, etc. later
       default:
-        console.log(`ℹ️ Unhandled event type: ${event}`);
+        console.log(` Unhandled event type: ${event}`);
     }
 
     res.status(200).json({ status: 'ok' });
   } catch (error) {
-    console.error('❌ Error processing webhook:', error);
+    console.error(' Error processing webhook:', error);
     res.status(500).json({ error: 'Internal server error', details: error instanceof Error ? error.stack : String(error) });
   }
 };
 
 async function processPaymentFailed(paymentEntity: any) {
-  console.log(`💥 Processing real payment failure for payment ${paymentEntity.id}`);
+  console.log(` Processing real payment failure for payment ${paymentEntity.id}`);
   
   // Ensure the Order exists in the database to prevent foreign key constraints from failing
   if (paymentEntity.order_id) {
@@ -102,7 +102,7 @@ async function processPaymentFailed(paymentEntity: any) {
   if (action && action.status === 'pending') {
     await executeRecovery(action, payment);
   } else if (action) {
-    console.log(`⏭️ Strategy already ${action.status}. Skipping duplicate execution.`);
+    console.log(` Strategy already ${action.status}. Skipping duplicate execution.`);
   }
 }
 
@@ -111,7 +111,7 @@ async function processPaymentLinkPaid(paymentLinkEntity: any) {
   const recoveryActionId = notes.recovery_action_id;
 
   if (!recoveryActionId) {
-    console.log(`ℹ️ Payment link ${paymentLinkEntity.id} paid, but no recovery_action_id in notes. Ignored.`);
+    console.log(` Payment link ${paymentLinkEntity.id} paid, but no recovery_action_id in notes. Ignored.`);
     return;
   }
 
@@ -122,11 +122,11 @@ async function processPaymentLinkPaid(paymentLinkEntity: any) {
   });
 
   if (!existingAction) {
-    console.log(`⚠️ Webhook received for paid link ${paymentLinkEntity.id}, but RecoveryAction ${recoveryActionId} was not found in the local database. (Was the DB reset?)`);
+    console.log(` Webhook received for paid link ${paymentLinkEntity.id}, but RecoveryAction ${recoveryActionId} was not found in the local database. (Was the DB reset?)`);
     return;
   }
 
-  console.log(`🎉 Recovery successful for action ${recoveryActionId}! Payment link paid.`);
+  console.log(` Recovery successful for action ${recoveryActionId}! Payment link paid.`);
 
   await prisma.recoveryAction.update({
     where: { id: recoveryActionId },

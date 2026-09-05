@@ -6,7 +6,7 @@ import { DiagnosisResult } from './engine';
  * This guarantees the system always knows what to do with a failed payment.
  */
 export function fallbackDiagnosis(payment: Payment): DiagnosisResult {
-  console.log(`⚠️  Using rule-based fallback diagnosis for payment ${payment.id}`);
+  console.log(`  Using rule-based fallback diagnosis for payment ${payment.id}`);
 
   // Base fallback structure
   const result: DiagnosisResult = {

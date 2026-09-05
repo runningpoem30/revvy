@@ -10,4 +10,4 @@ export const razorpay = new Razorpay({
 // We also export the webhook secret for use in the webhook verification middleware
 export const razorpayWebhookSecret = config.RAZORPAY_WEBHOOK_SECRET;
 
-console.log(`✅ Razorpay Client initialized with Key ID: ${config.RAZORPAY_KEY_ID.substring(0, 12)}...`);
+console.log(` Razorpay Client initialized with Key ID: ${config.RAZORPAY_KEY_ID.substring(0, 12)}...`);

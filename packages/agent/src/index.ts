@@ -45,7 +45,7 @@ app.get('/health', async (req: Request, res: Response) => {
 
 // Start server
 const server = app.listen(port, () => {
-  console.log(`🛡️ Revvy AI Agent running on port ${port}`);
+  console.log(` Revvy AI Agent running on port ${port}`);
 });
 
 // Graceful shutdown
